@@ -12,6 +12,15 @@ mongoose.connect(process.env.MONGODB_URL, {
   .then(() => console.log('mongodb connected!'));
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`listening on port ${port}`);
+});
+
+// handle all promise rejections
+process.on('unhandledRejection', err => {
+  console.log(err.name, err.message);
+  // wait until all pending request finish, then shut down server
+  server.close(() => {
+    process.exit(1);
+  });
 });
