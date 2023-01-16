@@ -3,6 +3,13 @@ const AppError = require("../utils/appError");
 const handleCastErrorDB = err => {
   const message = `Invalid ${err.path}: ${err.value}.`;
   return new AppError(message, 400);
+};
+
+const handleDuplicateFieldsDB = err => {
+  const value = err.keyValue.name;
+
+  const message = `Duplicate field value: ${value}. Please use aother value!`
+  return new AppError(message, 400);
 }
 
 const sendErrorDev = (err, res) => {
@@ -39,9 +46,11 @@ module.exports = (err, req, res, next) => {
   } else if (process.env.NODE_ENV === 'production') {
     let error = {...err};
     error.name = err.name;
+    error.code = err.code;
 
     // for mongodb validate errors
     if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     sendErrorProd(error, res);
   }
 
